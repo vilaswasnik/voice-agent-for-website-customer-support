@@ -37,6 +37,8 @@ The product owner can **limit which websites the agent is allowed to work on**:
 | **Front end** | The simple page: avatar, URL box, mic button, live captions of the conversation |
 | **Voice in (STT)** | Converts the user's speech to text (e.g. OpenAI Whisper / Deepgram / browser Web Speech API) |
 | **Brain (LLM agent)** | Understands the request, plans the steps, decides the next action on the site, asks questions when unsure |
+| **Agent orchestration** | LangGraph runs the agent as a step-by-step state machine (plan → act → check → ask/confirm); LangChain provides the tools (browser actions, database lookups); CrewAI / AutoGen provide multi-agent crews for bigger jobs |
+| **LLM platform (pluggable)** | OpenAI, Azure OpenAI, or Amazon Bedrock, switchable by configuration; Copilot Studio is the Microsoft-ecosystem route for the Phase 3 business version |
 | **Voice out (TTS)** | Speaks the agent's replies in a natural voice (e.g. OpenAI TTS / ElevenLabs) |
 | **Site learner (crawler)** | Visits a newly entered site, maps pages, buttons, forms and flows; stores the map in the database |
 | **Browser worker** | A real automated browser (Playwright) that carries out the steps on the target site, in an isolated session per user |
@@ -77,6 +79,8 @@ The product owner can **limit which websites the agent is allowed to work on**:
 - Browser automation: Playwright
 - Database: PostgreSQL (Supabase is fine to start)
 - Hosting: a small cloud server / Render / Railway to begin
+- Agent frameworks: LangChain + LangGraph (core), CrewAI and AutoGen (multi-agent crews)
+- LLM platforms: OpenAI / Azure OpenAI / Amazon Bedrock — pluggable by config; Copilot Studio for the Microsoft business version
 
 ## 8. Honest challenges (plan for them, don't hide them)
 - **Every site is different** — the site-learner will be imperfect at first; start with popular sites and improve.
