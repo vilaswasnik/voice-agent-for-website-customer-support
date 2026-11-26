@@ -1,3 +1,5 @@
+import scopeConfig from "./scope-limit.json";
+
 export type ScopeMode = "single-site" | "multi-site" | "open";
 
 export interface ScopeLimitConfig {
@@ -6,6 +8,6 @@ export interface ScopeLimitConfig {
 }
 
 export const scopeLimit: ScopeLimitConfig = {
-  mode: "open",
-  allowedDomains: [],
+  mode: scopeConfig.mode as ScopeMode,
+  allowedDomains: scopeConfig.allowedDomains,
 };

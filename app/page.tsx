@@ -2,14 +2,17 @@
 
 import { FormEvent, useState } from "react";
 import { AgentAvatar } from "@/components/agent-avatar";
+import { isInspectResult, type InspectResult } from "@/types/inspect";
 import type { AgentState } from "@/types/agent";
 
 export default function Home() {
   const [website, setWebsite] = useState("");
   const [agentState, setAgentState] = useState<AgentState>("listening");
   const [message, setMessage] = useState("");
+  const [inspectResult, setInspectResult] = useState<InspectResult | null>(null);
+  const [isInspecting, setIsInspecting] = useState(false);
 
-  function handleStart(event: FormEvent<HTMLFormElement>) {
+  async function handleStart(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const enteredWebsite = website.trim();
 
@@ -18,12 +21,50 @@ export default function Home() {
       return;
     }
 
-    setMessage(`Ready to help you with ${enteredWebsite}. Voice support is coming soon.`);
+    setMessage("");
+    setInspectResult(null);
     setAgentState("thinking");
-    window.setTimeout(() => setAgentState("speaking"), 500);
+    setIsInspecting(true);
+
+    try {
+      const response = await fetch("/api/inspect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: enteredWebsite }),
+      });
+      const result: unknown = await response.json();
+
+      if (!response.ok) {
+        const detail =
+          typeof result === "object" &&
+          result !== null &&
+          "detail" in result &&
+          typeof result.detail === "string"
+            ? result.detail
+            : "The website could not be inspected.";
+        throw new Error(detail);
+      }
+
+      if (!isInspectResult(result)) {
+        throw new Error("The website inspector returned an invalid response.");
+      }
+
+      setInspectResult(result);
+      setAgentState("speaking");
+    } catch (error) {
+      setAgentState("listening");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "The website could not be inspected. Please try again.",
+      );
+    } finally {
+      setIsInspecting(false);
+    }
   }
 
   function handleMicrophoneClick() {
+    if (isInspecting) return;
     setAgentState((currentState) =>
       currentState === "listening" ? "thinking" : "listening",
     );
@@ -49,8 +90,8 @@ export default function Home() {
               type="text"
               value={website}
             />
-            <button className="start-button" type="submit">
-              Start
+            <button className="start-button" disabled={isInspecting} type="submit">
+              {isInspecting ? "Inspecting…" : "Start"}
             </button>
           </div>
         </form>
@@ -59,6 +100,7 @@ export default function Home() {
           aria-label="Activate microphone"
           className="microphone-button"
           onClick={handleMicrophoneClick}
+          disabled={isInspecting}
           type="button"
         >
           <svg
@@ -92,6 +134,37 @@ export default function Home() {
           <p className="feedback" aria-live="polite">
             {message}
           </p>
+        )}
+
+        {inspectResult && (
+          <section className="inspection-results" aria-live="polite">
+            <p className="inspection-results__summary">{inspectResult.summary}</p>
+            {inspectResult.headings.length > 0 && (
+              <div className="inspection-results__section">
+                <h2>Page headings</h2>
+                <ul>
+                  {inspectResult.headings.map((heading, index) => (
+                    <li key={`${heading}-${index}`}>{heading}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className="inspection-results__section">
+              <h2>Options on this site</h2>
+              {inspectResult.options.length > 0 ? (
+                <ul>
+                  {inspectResult.options.map((option, index) => (
+                    <li key={`${option.label}-${index}`}>
+                      <span>{option.label}</span>
+                      <span className="inspection-results__kind">{option.kind}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No main links or buttons were found.</p>
+              )}
+            </div>
+          </section>
         )}
       </div>
     </main>
