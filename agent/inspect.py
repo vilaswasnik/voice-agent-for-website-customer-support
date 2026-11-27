@@ -9,7 +9,7 @@ from playwright.async_api import async_playwright
 
 from agent.scope import ScopeError, load_scope_limit, normalize_and_check_url
 
-NAVIGATION_TIMEOUT_MS = 60_000
+NAVIGATION_TIMEOUT_MS = 20_000
 
 
 class InspectOption(TypedDict):

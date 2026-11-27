@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url: payload.url.trim() }),
       cache: "no-store",
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(25_000),
     });
   } catch {
     return NextResponse.json(

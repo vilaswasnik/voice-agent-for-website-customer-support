@@ -25,12 +25,20 @@ export default function Home() {
     setInspectResult(null);
     setAgentState("thinking");
     setIsInspecting(true);
+    setMessage("Inspecting the website. This should only take a moment...");
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 25_000);
 
     try {
       const response = await fetch("/api/inspect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: enteredWebsite }),
+        signal: controller.signal,
       });
       const result: unknown = await response.json();
 
@@ -51,14 +59,22 @@ export default function Home() {
 
       setInspectResult(result);
       setAgentState("speaking");
+      setMessage(result.summary);
+      if ("speechSynthesis" in window) {
+        const utterance = new SpeechSynthesisUtterance(result.summary);
+        window.speechSynthesis.speak(utterance);
+      }
     } catch (error) {
       setAgentState("listening");
       setMessage(
-        error instanceof Error
-          ? error.message
+        error instanceof DOMException && error.name === "AbortError"
+          ? "The website took too long to inspect. Please try another address."
+          : error instanceof Error
+            ? error.message
           : "The website could not be inspected. Please try again.",
       );
     } finally {
+      window.clearTimeout(timeout);
       setIsInspecting(false);
     }
   }

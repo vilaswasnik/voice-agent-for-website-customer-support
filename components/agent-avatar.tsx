@@ -11,6 +11,13 @@ const stateLabels: Record<AgentState, string> = {
 };
 
 export function AgentAvatar({ state }: AgentAvatarProps) {
+  const greeting =
+    state === "thinking"
+      ? "Inspecting the website..."
+      : state === "speaking"
+        ? "Here is what I found."
+        : "Hi, which website would you like to use today?";
+
   return (
     <section className={`agent agent--${state}`} aria-label="Virtual agent">
       <div className="agent__portrait" aria-hidden="true">
@@ -26,7 +33,7 @@ export function AgentAvatar({ state }: AgentAvatarProps) {
         <span className="agent__status-dot" />
         {stateLabels[state]}
       </p>
-      <p className="agent__greeting">Hi, which website would you like to use today?</p>
+      <p className="agent__greeting">{greeting}</p>
     </section>
   );
 }
